@@ -1,7 +1,28 @@
 var express = require("express");
 const app = express();
 const axios = require("axios").default;
+const {
+  initializeApp,
+  applicationDefault,
+  cert,
+} = require("firebase-admin/app");
+const {
+  getFirestore,
+  Timestamp,
+  FieldValue,
+  Filter,
+} = require("firebase-admin/firestore");
 require("dotenv").config();
+
+initializeApp({
+  credential: cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  }),
+});
+
+const db = getFirestore();
 
 app.get("/", (req, res) => {
   axios
@@ -13,12 +34,24 @@ app.get("/", (req, res) => {
         },
       }
     )
-    .then((as) => {
-      const object = {
-        name: as.data.result.capturedTexts.name,
-        concerts: as.data.result.capturedLists.concerts,
-      };
-      res.send(object);
+    .then(async (response) => {
+      const concerts = response.data.result.capturedLists.concerts.map((c) => {
+        return {
+          date: c.date.replace(/(\r\n|\n|\r)/gm, " "),
+          place: c.place.replace(/(\r\n|\n|\r)/gm, " "),
+          venue: c.venue
+            .replace(/(\r\n|\n|\r)/gm, " ")
+            .replace(c.place, "")
+            .replace("  ", ""), // Removes \n and checks if venue includes city and country name if it does, removes it.
+        };
+      });
+      console.log("🚀 ~ concerts ~ concerts:", concerts);
+      const docRef = db
+        .collection("concerts")
+        .doc(response.data.result.capturedTexts.name);
+
+      await docRef.set({ ...concerts });
+      res.send(concerts);
     });
 });
 
