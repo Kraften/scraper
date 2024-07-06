@@ -45,7 +45,6 @@ app.get("/", (req, res) => {
             .replace("  ", ""), // Removes \n and checks if venue includes city and country name if it does, removes it.
         };
       });
-      console.log("🚀 ~ concerts ~ concerts:", concerts);
       const docRef = db
         .collection("concerts")
         .doc(response.data.result.capturedTexts.name);
