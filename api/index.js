@@ -1,5 +1,4 @@
 var express = require("express");
-const { get } = require("request");
 const app = express();
 const axios = require("axios").default;
 
@@ -19,12 +18,6 @@ app.get("/", (req, res) => {
         name: as.data.result.capturedTexts.name,
         concerts: as.data.result.capturedLists.concerts,
       };
-      const header = {
-        headers: {
-          Authorization: `Bearer ${process.env.BROWSEAI_TOKEN}`,
-        },
-      };
-      console.log("🚀 ~ app.get ~ header:", header);
       console.log(object);
       res.send(object);
     });
